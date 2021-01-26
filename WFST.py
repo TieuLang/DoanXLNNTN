@@ -229,12 +229,36 @@ def Tach_Tu():
     print("Recall: "+str(recal))
     print("F1-score cua tach tu: "+str(f1_score))
 
+    f1 = open("demo.txt", 'r', encoding='utf-8')
+    f2 = open("test_demo.txt", 'w', encoding='utf-8')
+    st_real = list(map(str, f1.read().split('\n')))
+    st_raw = list([])
+    for i in range(len(st_real)):
+        tmp = ""
+        for j in range(len(st_real[i])):
+            if (st_real[i][j] == '_'):
+                tmp = tmp + " "
+            else:
+                tmp = tmp + st_real[i][j]
+        st_raw.append(tmp)
+    dem = 1
+    sl_tu = 1
+    tp = 0
+    fp = 0
+    fn = 0
+    for s in range(len(st_raw)):
+        if (st_raw[s] == ""):
+            break
+        for i in range(len(st_raw[s])):
+            if (st_raw[s][i] == ' '):
+                sl_tu += 1
+        out = WFSTSegmentation(dict, st_raw[s])
+        f2.write(out + '\n')
+
 Tach_Tu()
 
-def Gan_Nhan_Tu_Loai():
-    Nhan=list(["N","V","A","P","M","D","R","E","C","I","O","Z","X","CH"])
-    #Nhan=list(["UN","NN","VB","PRP"])
-    matrixA=list([])
+def build_matrix_A(data_gan_nhan,Nhan):
+    matrixA = list([])
 
     for i in range(len(Nhan)+1):
         tmp=list([])
@@ -242,26 +266,18 @@ def Gan_Nhan_Tu_Loai():
             tmp.append(int(0))
         matrixA.append(tmp)
 
-    f=open("data_gan_nhan.txt",'r',encoding='utf-8')
-    data_gan_nhan = list(map(str,f.read().split('\n')))
-    f.close()
-    for i in range(len(data_gan_nhan)):
-        data_gan_nhan[i]=list(map(str,data_gan_nhan[i].split()))
-        for j in range(len(data_gan_nhan[i])):
-            data_gan_nhan[i][j]=list(map(str,data_gan_nhan[i][j].split('/')))
-
     def inc(x,y):
-        x1=int(-1)
+        x1=int(0)
         y1=int(0)
         for i in range(len(Nhan)):
             if (x==Nhan[i]):
-                x1=i
+                x1=i+1
                 break
         for i in range(len(Nhan)):
             if (y==Nhan[i]):
                 y1=i
                 break
-        matrixA[x1+1][y1]+=1
+        matrixA[x1][y1]+=1
 
     for i in range(len(data_gan_nhan)):
 
@@ -269,26 +285,21 @@ def Gan_Nhan_Tu_Loai():
 
         for j in range(1,len(data_gan_nhan[i])):
             inc(data_gan_nhan[i][j-1][1],data_gan_nhan[i][j][1])
-
     for i in range(len(matrixA)):
         tmp=int(0)
         for j in range(len(matrixA[i])-1):
             matrixA[i][j]+=1
             tmp+=matrixA[i][j]
-        matrixA[i][len(matrixA)-1]=tmp
+        matrixA[i][len(matrixA[i])-1]=tmp
         for j in range(len(matrixA)-1):
-            matrixA[i][j]=float(matrixA[i][j]/matrixA[i][len(matrixA)-1])
+            matrixA[i][j]=float(matrixA[i][j]/tmp)
+    return matrixA
 
-   #Tinh Matrix B
-    danh_sach_tu=list([])
-    for i in range(len(data_gan_nhan)):
-        for j in range(len(data_gan_nhan[i])):
-            if not (data_gan_nhan[i][j][0] in danh_sach_tu):
-                danh_sach_tu.append(data_gan_nhan[i][j][0])
+def build_matrix_B(Nhan,danh_sach_tu,data_gan_nhan):
     matrixB=list([])
     for i in range(len(Nhan)):
         tmp=list([])
-        for j in range(len(danh_sach_tu)+1):
+        for j in range(len(danh_sach_tu)+2):
             tmp.append(int(0))
         matrixB.append(tmp)
     for i in range(len(data_gan_nhan)):
@@ -300,57 +311,88 @@ def Gan_Nhan_Tu_Loai():
             matrixB[i][len(matrixB[i])-1]+=matrixB[i][j]
         for j in range(len(matrixB[i])-1):
             matrixB[i][j]=float(matrixB[i][j]/matrixB[i][len(matrixB[i])-1])
+    return matrixB
+
+def Gan_Nhan_Tu_Loai():
+    Nhan=list(["N","V","A","P","M","D","R","E","C","I","O","Z","CH","X"])
+    #Nhan=list(["UN","NN","VB","PRP"])
+
+    f = open("data_gan_nhan.txt", 'r', encoding='utf-8')
+    data_gan_nhan = list(map(str, f.read().split('\n')))
+    f.close()
+    for i in range(len(data_gan_nhan)):
+        data_gan_nhan[i] = list(map(str, data_gan_nhan[i].split()))
+        for j in range(len(data_gan_nhan[i])):
+            data_gan_nhan[i][j] = list(map(str, data_gan_nhan[i][j].split('/')))
+
+    matrixA=build_matrix_A(data_gan_nhan,Nhan)
+
+   #Tinh Matrix B
+    danh_sach_tu=list([])
+    for i in range(len(data_gan_nhan)):
+        for j in range(len(data_gan_nhan[i])):
+            if not (data_gan_nhan[i][j][0] in danh_sach_tu):
+                danh_sach_tu.append(data_gan_nhan[i][j][0])
+
+    matrixB=build_matrix_B(Nhan,danh_sach_tu,data_gan_nhan)
 
     f1 = open("test.txt", 'r', encoding='utf-8')
     test_gan_nhan = list(map(str, f1.read().split('\n')))
     f2=open("Kq_GanNhan.txt",'w',encoding='utf-8')
-    for s in test_gan_nhan:
-        s1=list(map(str,s.split()))
-        if s1==[]:
-            continue
-        vtb=list([])
-        for i in range(len(Nhan)):
-            vtb.append([])
-        x=float(0)
-        Nhan_kq=[]
-        for i in range(len(s1)):
-            Nhan_kq.append("")
 
-        for i in range(len(Nhan)):
-            if (danh_sach_tu.count(s1[0])==0):
-                if (Nhan[i]=="X"):
-                    vtb[i].append(float(1))
+    def viterbi(test_gan_nhan):
+        kq_out=str("")
+        for s in test_gan_nhan:
+            s1=list(map(str,s.split()))
+            if (s1==[]):
+                continue
+            vtb=list([])
+            tr=list([])
+            for i in range(len(Nhan)):
+                vtb.append(list([]))
+                tr.append(list([]))
+            for i in range(len(Nhan)):
+                if (danh_sach_tu.count(s1[0])==0):
+                    vtb[i].append(float(matrixA[0][i]*matrixB[i][len(matrixB[i])-2]))
                 else:
-                    vtb[i].append(float(0))
-            else:
-                vtb[i].append(float(matrixB[i][danh_sach_tu.index(s1[0])]))
-            if (vtb[i][0]>x):
-                x=vtb[i][0]
-                Nhan_kq[0]=Nhan[i]
+                    vtb[i].append(float(matrixA[0][i]*matrixB[i][danh_sach_tu.index(s1[0])]))
+                tr[i].append(int(-1))
+            for j in range(1,len(s1)):
+                for i in range(len(Nhan)):
+                    tmp=list([])
+                    for k in range(len(Nhan)):
+                        if (danh_sach_tu.count(s1[j])==0):
+                            tmp.append(float(vtb[k][j-1]*matrixA[k+1][i]*matrixB[i][len(matrixB[i])-2]))
+                        else:
+                            tmp.append(float(vtb[k][j-1]*matrixA[k+1][i]*matrixB[i][danh_sach_tu.index(s1[j])]))
+                    vtb[i].append(tmp[0])
+                    tr[i].append(0)
+                    for k in range(1,len(tmp)):
+                        if (vtb[i][j]<tmp[k]):
+                            vtb[i][j]=tmp[k]
+                            tr[i][j]=k
+            x=int(0)
+            for i in range(len(Nhan)):
+                if (vtb[x][len(s1)-1]<vtb[i][len(s1)-1]):
+                    x=i
+            Nhan_kq=list([])
+            for i in range(len(s1)):
+                Nhan_kq.append(str(""))
+            for i in range(len(s1)-1,-1,-1):
+                Nhan_kq[i]=Nhan[x]
+                x=tr[x][i]
+            out = ""
+            for i in range(len(s1) - 1):
+                out = out + s1[i] + '/' + Nhan_kq[i] + ' '
+            out = out + s1[len(s1) - 1] + '/' + Nhan_kq[len(Nhan_kq) - 1] + '\n'
+            kq_out=kq_out+out
+        return kq_out
 
-        for j in range(1,len(s1)):
-            for i in range(len(Nhan)):
-                if (danh_sach_tu.count(s1[j]) == 0):
-                    if (Nhan[i] == "X"):
-                        vtb[i].append(float(1))
-                    else:
-                        vtb[i].append(float(0))
-                else:
-                    vtb[i].append(x*matrixB[i][danh_sach_tu.index(s1[j])])
-            x=float(0)
-            for i in range(len(Nhan)):
-                if (vtb[i][j]>x):
-                    x=vtb[i][j]
-                    Nhan_kq[j]=Nhan[i]
-        out=""
-        for i in range(len(s1)-1):
-            out=out+s1[i]+'/'+Nhan_kq[i]+' '
-        out=out+s1[len(s1)-1]+'/'+Nhan_kq[len(Nhan_kq)-1]+'\n'
-        f2.write(out)
+    kq_out = viterbi(test_gan_nhan)
+    f2.write(kq_out)
     f1.close()
     f2.close()
-
-    f=open("kq_GanNhan.txt",'r',encoding='utf-8')
+    f = open("kq_GanNhan.txt", 'r', encoding='utf-8')
     out_gan_nhan = list(map(str, f.read().split('\n')))
     f.close()
     for i in range(len(out_gan_nhan)):
@@ -358,10 +400,10 @@ def Gan_Nhan_Tu_Loai():
         for j in range(len(out_gan_nhan[i])):
             out_gan_nhan[i][j] = list(map(str, out_gan_nhan[i][j].split('/')))
 
-    H=0
-    T=0
-    H1=0
-    f3=open("test_gan_nhan.txt","r+",encoding="utf-8")
+    H = 0
+    T = 0
+    H1 = 0
+    f3 = open("test_gan_nhan.txt", "r+", encoding="utf-8")
     data_gan_nhan = list(map(str, f3.read().split('\n')))
     f.close()
     for i in range(len(data_gan_nhan)):
@@ -370,62 +412,19 @@ def Gan_Nhan_Tu_Loai():
             data_gan_nhan[i][j] = list(map(str, data_gan_nhan[i][j].split('/')))
     for i in range(len(data_gan_nhan)):
         for j in range(len(data_gan_nhan[i])):
-            T+=1
-            if (out_gan_nhan[i][j][1] != 'X'):
+            T += 1
+            if (out_gan_nhan[i][j][1] != "X"):
                 H1 += 1
-            if (data_gan_nhan[i][j]==out_gan_nhan[i][j]):
-                H+=1
+            if (data_gan_nhan[i][j] == out_gan_nhan[i][j]):
+                H += 1
 
-    print(str(float(H)/float(T)))
-
-    f1 = open("test_kq.txt", 'r', encoding='utf-8')
+    print("Do chinh xac cua gan nhan tu loai la: " + str(float(H) / float(T)))
+    f1 = open("test_demo.txt", 'r', encoding='utf-8')
     test_gan_nhan = list(map(str, f1.read().split('\n')))
-    f2 = open("test_Kq_GanNhan.txt", 'w', encoding='utf-8')
-    for s in test_gan_nhan:
-        s1 = list(map(str, s.split()))
-        if s1 == []:
-            continue
-        vtb = list([])
-        for i in range(len(Nhan)):
-            vtb.append([])
-        x = float(0)
-        Nhan_kq = []
-        for i in range(len(s1)):
-            Nhan_kq.append("")
-
-        for i in range(len(Nhan)):
-            if (danh_sach_tu.count(s1[0]) == 0):
-                if (Nhan[i] == "X"):
-                    vtb[i].append(float(1))
-                else:
-                    vtb[i].append(float(0))
-            else:
-                vtb[i].append(float(matrixB[i][danh_sach_tu.index(s1[0])]))
-            if (vtb[i][0] > x):
-                x = vtb[i][0]
-                Nhan_kq[0] = Nhan[i]
-
-        for j in range(1, len(s1)):
-            for i in range(len(Nhan)):
-                if (danh_sach_tu.count(s1[j]) == 0):
-                    if (Nhan[i] == "X"):
-                        vtb[i].append(float(1))
-                    else:
-                        vtb[i].append(float(0))
-                else:
-                    vtb[i].append(x * matrixB[i][danh_sach_tu.index(s1[j])])
-            x = float(0)
-            for i in range(len(Nhan)):
-                if (vtb[i][j] > x):
-                    x = vtb[i][j]
-                    Nhan_kq[j] = Nhan[i]
-        out = ""
-        for i in range(len(s1) - 1):
-            out = out + s1[i] + '/' + Nhan_kq[i] + ' '
-        out = out + s1[len(s1) - 1] + '/' + Nhan_kq[len(Nhan_kq) - 1] + '\n'
-        f2.write(out)
+    f2 = open("test_Kq_demo.txt", 'w', encoding='utf-8')
+    kq_out=viterbi(test_gan_nhan)
+    f2.write(kq_out)
     f1.close()
     f2.close()
-
 
 Gan_Nhan_Tu_Loai()
