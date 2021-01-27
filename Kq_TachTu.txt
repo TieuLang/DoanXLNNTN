@@ -39,7 +39,7 @@ VĐV thắng điểm được xác_định trên cơ_sở tổng các đòn chí
 VĐV thắng K.O đối_phương khi tung ra đòn đánh hợp_lệ khiến đối_phương không_thể tiếp_tục thi_đấu sau 10 lần đếm của trọng_tài chính ( 10 giây ) .
 Thắng do cách_biệt trình_độ :
 - Nếu giám_sát trưởng sau khi hội_ý với các thành_viên trong Ban Giám_sát tin_tưởng rằng máy chấm điểm điện_tử với 15 điểm cách_biệt giữa hai VĐV , trận đấu có_thể chấm_dứt để tránh cho một VĐV bị những đòn không cần_thiết .
-Ông_ta có quyền dừng trận đấu bằng cách gõ cồng hay các phương_tiện khác , hỏi ý_kiến trọng_tài và theo kết_quả đó tuyên_bố “ Góc X là người chiến_thắng bởi RSC” .
+Ông_ta có quyền dừng trận đấu bằng cách gõ cồng hay các phương_tiện khác , hỏi ý_kiến trọng_tài và theo kết_quả đó tuyên_bố “ Góc X là người chiến_thắng bởi RSC ” .
 Lưu_ý :
 - Nếu một VĐV bị truất quyền , VĐV kia là người thắng cuộc .
 Nếu cả hai VĐV bị truất quyền , quyết_định sẽ được công_bố .
